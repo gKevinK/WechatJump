@@ -28,9 +28,13 @@ public class MainActivity extends AppCompatActivity {
                 if (!serviceStarted) {
                     startService(new Intent(MainActivity.this, MainService.class));
                     serviceStarted = true;
+                    ((FloatingActionButton) findViewById(R.id.fab))
+                            .setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
                 } else {
                     stopService(new Intent(MainActivity.this, MainService.class));
                     serviceStarted = false;
+                    ((FloatingActionButton) findViewById(R.id.fab))
+                            .setImageResource(android.R.drawable.ic_menu_send);
                 }
             }
         });
