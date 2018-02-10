@@ -3,7 +3,9 @@ package win.kevink.wejump;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.Gravity;
@@ -82,6 +84,7 @@ public class MainService extends Service {
         params.format = PixelFormat.RGBA_8888;
         params.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                 | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                 | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                 | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
                 | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
@@ -96,4 +99,14 @@ public class MainService extends Service {
             layout = null;
         }
     }
+
+    Point match() {
+        int x = 0;
+        int y = 0;
+        return new Point(x, y);
+    }
+
+//    Bitmap capture() {
+//        return;
+//    }
 }
