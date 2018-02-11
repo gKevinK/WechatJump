@@ -54,6 +54,9 @@ public class MainService extends Service {
                         Toast.LENGTH_SHORT).show();
             }
         }
+        if (ShotActivity.current == null) {
+            startActivity(new Intent(MainService.this, ShotActivity.class));
+        }
         Toast.makeText(getApplicationContext(), "服务已启动",
                 Toast.LENGTH_SHORT).show();
         return super.onStartCommand(intent, flags, startId);
@@ -69,6 +72,8 @@ public class MainService extends Service {
         removeOverlapLayer();
         timer.cancel();
         timer = null;
+        if (ShotActivity.current != null)
+            ShotActivity.current.finish();
         super.onDestroy();
     }
 
@@ -93,7 +98,7 @@ public class MainService extends Service {
     void addOverlapLayer() {
         WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
 
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
         params.format = PixelFormat.RGBA_8888;
         params.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                 | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
@@ -121,12 +126,13 @@ public class MainService extends Service {
 
     void beginCapture() {
         layout.setVisibility(View.GONE);
-        startActivity(new Intent(MainService.this, ShotActivity.class));
+        if (ShotActivity.current != null)
+            ShotActivity.current.startCapture();
     }
 
     void afterCapture(Bitmap bitmap) {
         // TODO
-        Toast.makeText(getApplicationContext(), "Screenshot received",
+        Toast.makeText(getApplicationContext(), "Screenshot received " + bitmap.getWidth() + " " + bitmap.getHeight(),
                 Toast.LENGTH_SHORT).show();
 
         Point p = match(bitmap);
