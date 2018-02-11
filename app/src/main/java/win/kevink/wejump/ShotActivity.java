@@ -28,6 +28,7 @@ public class ShotActivity extends Activity {
 
     ServiceConnection mSC;
 
+    VirtualDisplay mVD;
     Bitmap bitmap;
     int mDensity;
     int mWidth;
@@ -69,9 +70,13 @@ public class ShotActivity extends Activity {
         switch (requestCode) {
             case REQUEST_MEDIA_PROJECTION:
                 if (resultCode == RESULT_OK && data != null) {
-                    getSize();
-                    capture(data);
-                    sendToService();
+                    try {
+                        prepare();
+                        capture(data);
+                    } catch (Exception e) {
+                        Toast.makeText(getApplicationContext(), e.toString(),
+                                Toast.LENGTH_LONG).show();
+                    }
                 } else {
                     Toast.makeText(getApplicationContext(), "截屏请求被拒绝",
                             Toast.LENGTH_SHORT).show();
@@ -83,6 +88,7 @@ public class ShotActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
+        mVD.release();
         unbindService(mSC);
     }
 
@@ -90,34 +96,41 @@ public class ShotActivity extends Activity {
         bindService(new Intent(getApplicationContext(), MainService.class), mSC, Context.BIND_AUTO_CREATE);
     }
 
-    private void getSize() {
+    private void prepare() {
         mDensity = getResources().getDisplayMetrics().densityDpi;
         Point point = new Point();
         getWindowManager().getDefaultDisplay().getSize(point);
         mWidth = point.x;
         mHeight = point.y;
-
     }
 
     private void capture(Intent data) {
         MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         MediaProjection mp = mpm.getMediaProjection(Activity.RESULT_OK, data);
-        ImageReader ir = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 1);
-        VirtualDisplay mvd = mp.createVirtualDisplay("screen-mirror",
+        ImageReader imageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
+        mVD = mp.createVirtualDisplay("screen-mirror",
                 mWidth, mHeight, mDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                ir.getSurface(), null, null);
-        Image image = ir.acquireLatestImage();
-        mvd.release();
-        int width = image.getWidth();
-        int height = image.getHeight();
-        final Image.Plane[] planes = image.getPlanes();
-        final ByteBuffer buffer = planes[0].getBuffer();
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * width;
-        bitmap = Bitmap.createBitmap(width+rowPadding/pixelStride, height, Bitmap.Config.ARGB_8888);
-        bitmap.copyPixelsFromBuffer(buffer);
-        bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
-        image.close();
+                imageReader.getSurface(), null, null);
+
+        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+            @Override
+            public void onImageAvailable(ImageReader reader) {
+                Image image = reader.acquireLatestImage();
+                int width = image.getWidth();
+                int height = image.getHeight();
+                final Image.Plane[] planes = image.getPlanes();
+                final ByteBuffer buffer = planes[0].getBuffer();
+                int pixelStride = planes[0].getPixelStride();
+                int rowStride = planes[0].getRowStride();
+                int rowPadding = rowStride - pixelStride * width;
+                bitmap = Bitmap.createBitmap(width+rowPadding/pixelStride, height, Bitmap.Config.ARGB_8888);
+                bitmap.copyPixelsFromBuffer(buffer);
+                bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
+                image.close();
+
+                sendToService();
+            }
+        }, null);
+
     }
 }

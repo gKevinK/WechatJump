@@ -9,5 +9,9 @@
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button" />
+        android:text="3" />
+
+    <View
+        android:layout_width="2dp"
+        android:layout_height="2dp" />
 </RelativeLayout>
