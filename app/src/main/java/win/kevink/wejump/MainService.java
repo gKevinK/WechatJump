@@ -11,6 +11,7 @@ import android.hardware.display.DisplayManager;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.Gravity;
@@ -24,6 +25,8 @@ import java.util.TimerTask;
 public class MainService extends Service {
 
     Handler handler = new Handler();
+
+    Binder binder = new Binder();
 
     Timer timer;
 
@@ -58,7 +61,7 @@ public class MainService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
     @Override
@@ -75,11 +78,15 @@ public class MainService extends Service {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    // TODO
-                    Toast.makeText(getApplicationContext(), "Toast",
-                            Toast.LENGTH_SHORT).show();
+                    beginCapture();
                 }
             });
+        }
+    }
+
+    class Binder extends android.os.Binder {
+        MainService getService() {
+            return MainService.this;
         }
     }
 
@@ -117,33 +124,10 @@ public class MainService extends Service {
         startActivity(new Intent(MainService.this, ShotActivity.class));
     }
 
-//    void capture2(Intent data) {
-//        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-//        MediaProjection mp = mpm.getMediaProjection(Activity.RESULT_OK, data);
-//        ImageReader ir = ImageReader.newInstance(
-//                getScreenWidth(),
-//                getScreenHeight(),
-//                PixelFormat.RGB_888,
-//                1);
-//        mVirtualDisplay = mp.createVirtualDisplay("screen-mirror",
-//                mScreenWidth, mScreenHeight, mScreenDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-//                ir.getSurface(), null, null);
-//        Image image = mImageReader.acquireLatestImage();
-//        int width = image.getWidth();
-//        int height = image.getHeight();
-//        final Image.Plane[] planes = image.getPlanes();
-//        final ByteBuffer buffer = planes[0].getBuffer();
-//        int pixelStride = planes[0].getPixelStride();
-//        int rowStride = planes[0].getRowStride();
-//        int rowPadding = rowStride - pixelStride * width;
-//        Bitmap bitmap = Bitmap.createBitmap(width+rowPadding/pixelStride, height, Bitmap.Config.ARGB_8888);
-//        bitmap.copyPixelsFromBuffer(buffer);
-//        bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
-//        image.close();
-//    }
-
     void afterCapture(Bitmap bitmap) {
         // TODO
+        Toast.makeText(getApplicationContext(), "Screenshot received",
+                Toast.LENGTH_SHORT).show();
 
         Point p = match(bitmap);
         layout.setCoordinate(p);
