@@ -1,6 +1,7 @@
 package win.kevink.wejump;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.widget.RelativeLayout;
@@ -23,5 +24,9 @@ public class OverlapLayout extends RelativeLayout {
                     Toast.LENGTH_SHORT).show();
         }
         return true;
+    }
+
+    public void setCoordinate(Point point) {
+
     }
 }

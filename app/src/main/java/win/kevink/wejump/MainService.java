@@ -1,14 +1,20 @@
 package win.kevink.wejump;
 
+import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.hardware.display.DisplayManager;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.Gravity;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -58,9 +64,9 @@ public class MainService extends Service {
     @Override
     public void onDestroy() {
         removeOverlapLayer();
-        super.onDestroy();
         timer.cancel();
         timer = null;
+        super.onDestroy();
     }
 
     class RecognizeTask extends TimerTask {
@@ -100,13 +106,49 @@ public class MainService extends Service {
         }
     }
 
-    Point match() {
+    Point match(Bitmap bitmap) {
         int x = 0;
         int y = 0;
         return new Point(x, y);
     }
 
-//    Bitmap capture() {
-//        return;
+    void beginCapture() {
+        layout.setVisibility(View.GONE);
+        startActivity(new Intent(MainService.this, ShotActivity.class));
+    }
+
+//    void capture2(Intent data) {
+//        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+//        MediaProjection mp = mpm.getMediaProjection(Activity.RESULT_OK, data);
+//        ImageReader ir = ImageReader.newInstance(
+//                getScreenWidth(),
+//                getScreenHeight(),
+//                PixelFormat.RGB_888,
+//                1);
+//        mVirtualDisplay = mp.createVirtualDisplay("screen-mirror",
+//                mScreenWidth, mScreenHeight, mScreenDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+//                ir.getSurface(), null, null);
+//        Image image = mImageReader.acquireLatestImage();
+//        int width = image.getWidth();
+//        int height = image.getHeight();
+//        final Image.Plane[] planes = image.getPlanes();
+//        final ByteBuffer buffer = planes[0].getBuffer();
+//        int pixelStride = planes[0].getPixelStride();
+//        int rowStride = planes[0].getRowStride();
+//        int rowPadding = rowStride - pixelStride * width;
+//        Bitmap bitmap = Bitmap.createBitmap(width+rowPadding/pixelStride, height, Bitmap.Config.ARGB_8888);
+//        bitmap.copyPixelsFromBuffer(buffer);
+//        bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
+//        image.close();
 //    }
+
+    void afterCapture(Bitmap bitmap) {
+        // TODO
+
+        Point p = match(bitmap);
+        layout.setCoordinate(p);
+
+        layout.setVisibility(View.VISIBLE);
+    }
+
 }
