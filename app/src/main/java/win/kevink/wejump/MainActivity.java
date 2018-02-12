@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     boolean serviceStarted = false;
     MainService.Binder binder;
+    ServiceConnection mSC;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +40,10 @@ public class MainActivity extends AppCompatActivity {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
                 if (serviceStarted) {
+                    unbindService(mSC);
+                    binder = null;
                     stopService(new Intent(MainActivity.this, MainService.class));
-                    serviceStarted = false;
+                    setServiceState(false);
                     return;
                 }
                 if (binder == null)
@@ -58,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startMainService(final boolean begin) {
-        ServiceConnection mSC = new ServiceConnection() {
+        mSC = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 binder = (MainService.Binder) service;
@@ -78,7 +81,8 @@ public class MainActivity extends AppCompatActivity {
         bindService(new Intent(this, MainService.class), mSC, BIND_AUTO_CREATE);
     }
 
-    private void setFabState() {
+    private void setServiceState(boolean isStarted) {
+        serviceStarted = isStarted;
         if (serviceStarted) {
             ((FloatingActionButton) findViewById(R.id.fab))
                     .setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
@@ -97,8 +101,7 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK && data != null) {
                     try {
                         binder.getService().start(resultCode, data);
-                        serviceStarted = binder.getState();
-                        setFabState();
+                        setServiceState(binder.getState());
                     } catch (Exception e) {
                         Toast.makeText(getApplicationContext(), e.toString(),
                                 Toast.LENGTH_LONG).show();
@@ -111,5 +114,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mSC != null && binder != null && serviceStarted == false) {
+            unbindService(mSC);
+            binder = null;
+            stopService(new Intent(MainActivity.this, MainService.class));
+        }
+    }
 }
