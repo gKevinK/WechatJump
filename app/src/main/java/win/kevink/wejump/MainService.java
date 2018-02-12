@@ -77,6 +77,7 @@ public class MainService extends Service {
         if (mVD != null) {
             mVD.release();
             mVD = null;
+            mMP.stop();
         }
         Toast.makeText(getApplicationContext(), "服务已结束",
                 Toast.LENGTH_SHORT).show();
@@ -199,10 +200,10 @@ public class MainService extends Service {
     }
 
     void afterCapture(Bitmap bitmap) {
-        Point p = match(bitmap);
         if (layout != null) {
-            layout.setCoordinate(p);
             layout.setVisibility(View.VISIBLE);
+            Point p = match(bitmap);
+            layout.setCoordinate(p);
         }
     }
 
@@ -215,18 +216,18 @@ public class MainService extends Service {
     }
 
     Point match(Bitmap bitmap) {
-//        for (int y = 600; y < bitmap.getHeight(); y = y + 2) {
-//            int l = 0, r = 0;
-//            for (int x = 100; x < bitmap.getWidth() - 100; x = x + 2) {
-//                int pixel = bitmap.getPixel(x, y);
-//                if (compare(pixel)) {
-//                    if (l == 0) l = x;
-//                    r = y;
-//                }
-//                if (l > 0)
-//                    return new Point((l + r) / 2, y + 192);
-//            }
-//        }
+        for (int y = 600; y < bitmap.getHeight(); y = y + 2) {
+            int l = 0, r = 0;
+            for (int x = 100; x < bitmap.getWidth() - 100; x = x + 2) {
+                int pixel = bitmap.getPixel(x, y);
+                if (compare(pixel)) {
+                    if (l == 0) l = x;
+                    r = y;
+                }
+                if (l > 0)
+                    return new Point((l + r) / 2, y + 192);
+            }
+        }
         int x = bitmap.getWidth() / 2;
         int y = bitmap.getHeight();
         return new Point(x, y);

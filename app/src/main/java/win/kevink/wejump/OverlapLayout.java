@@ -36,18 +36,17 @@ public class OverlapLayout extends RelativeLayout {
 
     public void setCoordinate(Point point) {
         mPoint = point;
-        int offset = (int)(50 / 160.0f * mDensity);
+        int offset = (int)(25 / 160.0f * mDensity);
         View leftLine = findViewById(R.id.left_line);
         View rightLine = findViewById(R.id.right_line);
 
-//        View line = leftLine;
-//        line.setLeft(point.x - offset);
-//        line.setTop(point.y);
-//        line = rightLine;
-//        line.setLeft(point.x - offset);
-//        line.setTop(point.y);
-        View line = leftLine;
-        line.setLeft(100);
-        line.setTop(100);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) leftLine.getLayoutParams();
+        params.leftMargin = point.x - offset;
+        params.topMargin = point.y;
+        leftLine.setLayoutParams(params);
+        params = (RelativeLayout.LayoutParams) rightLine.getLayoutParams();
+        params.leftMargin = point.x - offset;
+        params.topMargin = point.y;
+        rightLine.setLayoutParams(params);
     }
 }
