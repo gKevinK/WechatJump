@@ -18,11 +18,14 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 
 public class ShotActivity extends Activity {
+
+    static ShotActivity current;
 
     public static final int REQUEST_MEDIA_PROJECTION = 0x2893;
 
@@ -37,30 +40,29 @@ public class ShotActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        current = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+//        getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
         getWindow().setDimAmount(0f);
+        WindowManager.LayoutParams params = getWindow().getAttributes();
+        params.width = 1;
+        params.height = 1;
+        params.x = 0;
+        params.y = 0;
+        getWindow().setAttributes(params);
 
         mSC = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 MainService s = ((MainService.Binder)service).getService();
                 s.afterCapture(bitmap);
-                finish();
+//                mVD.release();
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
             }
         };
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-        startActivityForResult(mpm.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
     }
 
     @Override
@@ -85,11 +87,9 @@ public class ShotActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mVD.release();
-        unbindService(mSC);
+    public void startCapture() {
+        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+        startActivityForResult(mpm.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
     }
 
     private void sendToService() {
@@ -128,6 +128,7 @@ public class ShotActivity extends Activity {
                 bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
                 image.close();
 
+                mVD.release();
                 sendToService();
             }
         }, null);
