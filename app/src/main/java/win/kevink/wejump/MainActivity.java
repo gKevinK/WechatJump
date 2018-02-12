@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
                     MediaProjectionManager mpm = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
                     startActivityForResult(mpm.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
                 }
+                setServiceState(binder.getState());
                 findViewById(R.id.fab).setEnabled(true);
             }
 

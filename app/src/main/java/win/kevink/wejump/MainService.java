@@ -19,12 +19,15 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -158,10 +161,9 @@ public class MainService extends Service {
             mMP = mpm.getMediaProjection(Activity.RESULT_OK, mData);
         }
         mDensity = getResources().getDisplayMetrics().densityDpi;
-        Point point = new Point();
-        wm.getDefaultDisplay().getSize(point);
-        mWidth = point.x;
-        mHeight = point.y;
+        mWidth = getResources().getDisplayMetrics().widthPixels;
+//        mHeight = getResources().getDisplayMetrics().heightPixels;
+        mHeight = getH();
         if (mVD == null) {
             mIR = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
             mVD = mMP.createVirtualDisplay("screen-mirror",
@@ -172,6 +174,24 @@ public class MainService extends Service {
         layout.mDensity = mDensity;
         layout.mWidth = mWidth;
         layout.mHeight = mHeight;
+    }
+
+    private int getH() {
+        int h = 0;
+        Display display = wm.getDefaultDisplay();
+        DisplayMetrics dm = new DisplayMetrics();
+        @SuppressWarnings("rawtypes")
+        Class c;
+        try {
+            c = Class.forName("android.view.Display");
+            @SuppressWarnings("unchecked")
+            Method method = c.getMethod("getRealMetrics", DisplayMetrics.class);
+            method.invoke(display, dm);
+            h = dm.heightPixels;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return h;
     }
 
     void beginCapture() {
@@ -196,7 +216,7 @@ public class MainService extends Service {
 
                 afterCapture(bitmap);
             }
-        }, 100);
+        }, 200);
     }
 
     void afterCapture(Bitmap bitmap) {
@@ -208,8 +228,8 @@ public class MainService extends Service {
     }
 
     boolean compare(int pixel) {
-        int target = 0x35353B;
-        int err = 8;
+        int target = 0xFF35353B;
+        int err = 6;
         return (Math.abs(Color.red(pixel) - Color.red(target)) <= err
                 && Math.abs(Color.green(pixel) - Color.green(target)) <= err
                 && Math.abs(Color.blue(pixel) - Color.blue(target)) <= err);
@@ -222,14 +242,14 @@ public class MainService extends Service {
                 int pixel = bitmap.getPixel(x, y);
                 if (compare(pixel)) {
                     if (l == 0) l = x;
-                    r = y;
+                    r = x;
                 }
                 if (l > 0)
                     return new Point((l + r) / 2, y + 192);
             }
         }
         int x = bitmap.getWidth() / 2;
-        int y = bitmap.getHeight();
+        int y = bitmap.getHeight() / 2;
         return new Point(x, y);
     }
 
