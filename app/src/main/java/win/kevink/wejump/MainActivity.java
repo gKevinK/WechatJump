@@ -117,10 +117,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mSC != null && binder != null && serviceStarted == false) {
+        if (mSC != null && binder != null) {
             unbindService(mSC);
             binder = null;
-            stopService(new Intent(MainActivity.this, MainService.class));
+            if (serviceStarted == false)
+                stopService(new Intent(MainActivity.this, MainService.class));
         }
     }
 }

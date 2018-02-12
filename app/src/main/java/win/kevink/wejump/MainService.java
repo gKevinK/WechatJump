@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -19,6 +20,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.Gravity;
+import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -42,6 +44,7 @@ public class MainService extends Service {
     WindowManager wm;
     MediaProjectionManager mpm;
     MediaProjection mMP;
+    ImageReader mIR;
     VirtualDisplay mVD;
     int mDensity;
     int mWidth;
@@ -71,6 +74,10 @@ public class MainService extends Service {
         removeOverlapLayer();
         timer.cancel();
         timer = null;
+        if (mVD != null) {
+            mVD.release();
+            mVD = null;
+        }
         Toast.makeText(getApplicationContext(), "服务已结束",
                 Toast.LENGTH_SHORT).show();
         super.onDestroy();
@@ -82,7 +89,8 @@ public class MainService extends Service {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    beginCapture();
+                    if (!layout.isMoving)
+                        beginCapture();
                 }
             });
         }
@@ -106,7 +114,7 @@ public class MainService extends Service {
             try {
                 addOverlapLayer();
                 timer = new Timer();
-                timer.scheduleAtFixedRate(new RecognizeTask(), 5000, 3000);
+                timer.scheduleAtFixedRate(new RecognizeTask(), 2000, 3000);
                 Toast.makeText(getApplicationContext(), "服务已启动",
                         Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
@@ -149,26 +157,30 @@ public class MainService extends Service {
             mMP = mpm.getMediaProjection(Activity.RESULT_OK, mData);
         }
         mDensity = getResources().getDisplayMetrics().densityDpi;
-        layout.mDensity = mDensity;
         Point point = new Point();
         wm.getDefaultDisplay().getSize(point);
         mWidth = point.x;
         mHeight = point.y;
+        if (mVD == null) {
+            mIR = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
+            mVD = mMP.createVirtualDisplay("screen-mirror",
+                    mWidth, mHeight, mDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    mIR.getSurface(), null, null);
+        }
+
+        layout.mDensity = mDensity;
+        layout.mWidth = mWidth;
+        layout.mHeight = mHeight;
     }
 
     void beginCapture() {
-        layout.setVisibility(View.GONE);
+        layout.setVisibility(View.INVISIBLE);
         prepare();
 
-        final ImageReader imageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 1);
-        mVD = mMP.createVirtualDisplay("screen-mirror",
-                mWidth, mHeight, mDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                imageReader.getSurface(), null, null);
-
-        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onImageAvailable(ImageReader reader) {
-                Image image = reader.acquireLatestImage();
+            public void run() {
+                Image image = mIR.acquireLatestImage();
                 int width = image.getWidth();
                 int height = image.getHeight();
                 final Image.Plane[] planes = image.getPlanes();
@@ -180,22 +192,18 @@ public class MainService extends Service {
                 bitmap.copyPixelsFromBuffer(buffer);
                 bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
                 image.close();
-                imageReader.close();
 
-                if (mVD != null) {
-                    mVD.release();
-                    mVD = null;
-                }
                 afterCapture(bitmap);
             }
-        }, null);
+        }, 100);
     }
 
     void afterCapture(Bitmap bitmap) {
         Point p = match(bitmap);
-        layout.setCoordinate(p);
-
-        layout.setVisibility(View.VISIBLE);
+        if (layout != null) {
+            layout.setCoordinate(p);
+            layout.setVisibility(View.VISIBLE);
+        }
     }
 
     boolean compare(int pixel) {
@@ -207,22 +215,21 @@ public class MainService extends Service {
     }
 
     Point match(Bitmap bitmap) {
-        for (int y = 300; y < bitmap.getHeight(); y++) {
-            int l = 0, r = 0;
-            for (int x = 100; x < bitmap.getWidth() - 100; x++) {
-                int pixel = bitmap.getPixel(x, y);
-                if (compare(pixel)) {
-                    if (l == 0) l = x;
-                    r = y;
-                }
-                if (l > 0)
-                    return new Point((l + r) / 2, y + 192);
-            }
-        }
+//        for (int y = 600; y < bitmap.getHeight(); y = y + 2) {
+//            int l = 0, r = 0;
+//            for (int x = 100; x < bitmap.getWidth() - 100; x = x + 2) {
+//                int pixel = bitmap.getPixel(x, y);
+//                if (compare(pixel)) {
+//                    if (l == 0) l = x;
+//                    r = y;
+//                }
+//                if (l > 0)
+//                    return new Point((l + r) / 2, y + 192);
+//            }
+//        }
         int x = bitmap.getWidth() / 2;
         int y = bitmap.getHeight();
         return new Point(x, y);
     }
-
 
 }
