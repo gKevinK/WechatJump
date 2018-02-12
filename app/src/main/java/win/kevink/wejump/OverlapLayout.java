@@ -10,6 +10,7 @@ import android.widget.Toast;
 public class OverlapLayout extends RelativeLayout {
 
     Context mContext;
+    int mDensity = 480;
 
     public OverlapLayout(Context context) {
         super(context);

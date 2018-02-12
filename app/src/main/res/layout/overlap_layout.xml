@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/overlap_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <View
+        android:id="@+id/right_line"
+        android:layout_width="100dp"
+        android:layout_height="2dp"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:text="Button" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="200dp"
-        android:layout_height="300dp"
-        android:layout_below="@+id/button"
-        android:layout_centerHorizontal="true"
-        android:scaleType="fitCenter"
-        app:srcCompat="@mipmap/ic_launcher" />
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="30dp"
+        android:background="@android:color/holo_blue_dark"
+        android:rotation="30" />
+    <View
+        android:id="@+id/left_line"
+        android:layout_width="100dp"
+        android:layout_height="2dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="30dp"
+        android:background="@android:color/holo_blue_dark"
+        android:rotation="-30" />
 </RelativeLayout>

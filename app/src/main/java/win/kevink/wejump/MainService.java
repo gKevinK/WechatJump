@@ -5,6 +5,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.hardware.display.DisplayManager;
@@ -148,23 +149,18 @@ public class MainService extends Service {
             mMP = mpm.getMediaProjection(Activity.RESULT_OK, mData);
         }
         mDensity = getResources().getDisplayMetrics().densityDpi;
+        layout.mDensity = mDensity;
         Point point = new Point();
         wm.getDefaultDisplay().getSize(point);
         mWidth = point.x;
         mHeight = point.y;
     }
 
-    Point match(Bitmap bitmap) {
-        int x = 0;
-        int y = 0;
-        return new Point(x, y);
-    }
-
     void beginCapture() {
         layout.setVisibility(View.GONE);
         prepare();
 
-        ImageReader imageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 2);
+        final ImageReader imageReader = ImageReader.newInstance(mWidth, mHeight, PixelFormat.RGBA_8888, 1);
         mVD = mMP.createVirtualDisplay("screen-mirror",
                 mWidth, mHeight, mDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 imageReader.getSurface(), null, null);
@@ -184,6 +180,7 @@ public class MainService extends Service {
                 bitmap.copyPixelsFromBuffer(buffer);
                 bitmap = Bitmap.createBitmap(bitmap, 0, 0,width, height);
                 image.close();
+                imageReader.close();
 
                 if (mVD != null) {
                     mVD.release();
@@ -195,14 +192,37 @@ public class MainService extends Service {
     }
 
     void afterCapture(Bitmap bitmap) {
-        // TODO
-        Toast.makeText(getApplicationContext(), "Screenshot received " + bitmap.getWidth() + " " + bitmap.getHeight(),
-                Toast.LENGTH_SHORT).show();
-
         Point p = match(bitmap);
         layout.setCoordinate(p);
 
         layout.setVisibility(View.VISIBLE);
     }
+
+    boolean compare(int pixel) {
+        int target = 0x35353B;
+        int err = 8;
+        return (Math.abs(Color.red(pixel) - Color.red(target)) <= err
+                && Math.abs(Color.green(pixel) - Color.green(target)) <= err
+                && Math.abs(Color.blue(pixel) - Color.blue(target)) <= err);
+    }
+
+    Point match(Bitmap bitmap) {
+        for (int y = 300; y < bitmap.getHeight(); y++) {
+            int l = 0, r = 0;
+            for (int x = 100; x < bitmap.getWidth() - 100; x++) {
+                int pixel = bitmap.getPixel(x, y);
+                if (compare(pixel)) {
+                    if (l == 0) l = x;
+                    r = y;
+                }
+                if (l > 0)
+                    return new Point((l + r) / 2, y + 192);
+            }
+        }
+        int x = bitmap.getWidth() / 2;
+        int y = bitmap.getHeight();
+        return new Point(x, y);
+    }
+
 
 }
