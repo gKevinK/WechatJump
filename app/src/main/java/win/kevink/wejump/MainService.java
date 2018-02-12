@@ -43,22 +43,6 @@ public class MainService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (timer == null) {
-            timer = new Timer();
-            timer.scheduleAtFixedRate(new RecognizeTask(), 5000, 5000);
-            try {
-                addOverlapLayer();
-            } catch (Exception e) {
-                layout = null;
-                Toast.makeText(getApplicationContext(), e.toString(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        }
-        if (ShotActivity.current == null) {
-            startActivity(new Intent(MainService.this, ShotActivity.class));
-        }
-        Toast.makeText(getApplicationContext(), "服务已启动",
-                Toast.LENGTH_SHORT).show();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -80,12 +64,12 @@ public class MainService extends Service {
     class RecognizeTask extends TimerTask {
         @Override
         public void run() {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    beginCapture();
-                }
-            });
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    beginCapture();
+//                }
+//            });
         }
     }
 
@@ -93,6 +77,27 @@ public class MainService extends Service {
         MainService getService() {
             return MainService.this;
         }
+
+        boolean getState() {
+            return timer != null;
+        }
+    }
+
+    public void start(int resultCode, Intent data) {
+        if (timer == null) {
+            try {
+                addOverlapLayer();
+                timer = new Timer();
+                timer.scheduleAtFixedRate(new RecognizeTask(), 5000, 3000);
+                Toast.makeText(getApplicationContext(), "服务已启动",
+                        Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                layout = null;
+                Toast.makeText(getApplicationContext(), e.toString(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+
     }
 
     void addOverlapLayer() {
