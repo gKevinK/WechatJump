@@ -46,13 +46,14 @@ public class OverlapLayout extends RelativeLayout {
             findViewById(R.id.right_line).setVisibility(INVISIBLE);
         }
         float leng = 2 / ((float) Math.sqrt(3)) * Math.abs(mWidth - 2 * mPoint.x);
-        float ratio = 1;
+        float ratio = 1080 / mWidth * 1.392f;
         float time = leng * ratio;
         ObjectAnimator animatorX = ObjectAnimator.ofFloat(line, "translationX", mPoint.x, mWidth - mPoint.x);
         ObjectAnimator animatorY = ObjectAnimator.ofFloat(line, "translationY", mPoint.y, mPoint.y - leng / 2);
         animatorX.setDuration((int) time);
         animatorY.setDuration((int) time);
         animatorX.setInterpolator(new LinearInterpolator());
+        animatorY.setInterpolator(new LinearInterpolator());
         animatorX.start();
         animatorY.start();
 

@@ -166,7 +166,7 @@ public class MainService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
         else
-            params.type = WindowManager.LayoutParams.TYPE_TOAST;
+            params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
         params.format = PixelFormat.RGBA_8888;
         params.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                 | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
