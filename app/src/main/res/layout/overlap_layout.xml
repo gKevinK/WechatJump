@@ -9,23 +9,23 @@
 
     <View
         android:id="@+id/right_line"
-        android:layout_width="50dp"
+        android:layout_width="40dp"
         android:layout_height="2dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="0dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginLeft="-20dp"
+        android:layout_marginTop="0dp"
         android:background="@android:color/holo_blue_dark"
         android:rotation="30" />
 
     <View
         android:id="@+id/left_line"
-        android:layout_width="50dp"
+        android:layout_width="40dp"
         android:layout_height="2dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="0dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginLeft="-20dp"
+        android:layout_marginTop="0dp"
         android:background="@android:color/holo_blue_dark"
         android:rotation="-30" />
 </RelativeLayout>

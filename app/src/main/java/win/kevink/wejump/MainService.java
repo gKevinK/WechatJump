@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
-import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
@@ -22,7 +21,6 @@ import android.os.IBinder;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -52,6 +50,7 @@ public class MainService extends Service {
     int mDensity;
     int mWidth;
     int mHeight;
+    boolean mFirst = true;
 
     public MainService() {
     }
@@ -74,9 +73,11 @@ public class MainService extends Service {
 
     @Override
     public void onDestroy() {
-        removeOverlapLayer();
-        timer.cancel();
-        timer = null;
+        if (timer != null) {
+            removeOverlapLayer();
+            timer.cancel();
+            timer = null;
+        }
         if (mVD != null) {
             mVD.release();
             mVD = null;
@@ -93,7 +94,7 @@ public class MainService extends Service {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (!layout.isMoving)
+                    if (layout != null && !layout.isMoving)
                         beginCapture();
                 }
             });
@@ -118,7 +119,7 @@ public class MainService extends Service {
             try {
                 addOverlapLayer();
                 timer = new Timer();
-                timer.scheduleAtFixedRate(new RecognizeTask(), 2000, 3000);
+                timer.scheduleAtFixedRate(new RecognizeTask(), 2000, 1000);
                 Toast.makeText(getApplicationContext(), "服务已启动",
                         Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
@@ -177,30 +178,29 @@ public class MainService extends Service {
     }
 
     private int getH() {
-        int h = 0;
         Display display = wm.getDefaultDisplay();
         DisplayMetrics dm = new DisplayMetrics();
-        @SuppressWarnings("rawtypes")
-        Class c;
         try {
-            c = Class.forName("android.view.Display");
             @SuppressWarnings("unchecked")
-            Method method = c.getMethod("getRealMetrics", DisplayMetrics.class);
+            Method method = display.getClass().getMethod("getRealMetrics", DisplayMetrics.class);
             method.invoke(display, dm);
-            h = dm.heightPixels;
         } catch (Exception e) {
-            e.printStackTrace();
+            display.getMetrics(dm);
         }
-        return h;
+        return dm.heightPixels;
     }
 
     void beginCapture() {
         layout.setVisibility(View.INVISIBLE);
         prepare();
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+        if (mFirst) {
+            mFirst = false;
+            return;
+        }
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
                 Image image = mIR.acquireLatestImage();
                 int width = image.getWidth();
                 int height = image.getHeight();
@@ -215,8 +215,8 @@ public class MainService extends Service {
                 image.close();
 
                 afterCapture(bitmap);
-            }
-        }, 200);
+//            }
+//        }, 200);
     }
 
     void afterCapture(Bitmap bitmap) {
