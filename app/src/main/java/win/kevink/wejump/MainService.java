@@ -1,10 +1,15 @@
 package win.kevink.wejump;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -29,6 +34,8 @@ import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static android.app.NotificationManager.IMPORTANCE_HIGH;
 
 public class MainService extends Service {
 
@@ -77,6 +84,7 @@ public class MainService extends Service {
             removeOverlapLayer();
             timer.cancel();
             timer = null;
+            stopForeground(true);
         }
         if (mVD != null) {
             mVD.release();
@@ -111,7 +119,30 @@ public class MainService extends Service {
         }
     }
 
+    Notification getNotification() {
+        String CHANNEL_ID = "wejump.channel";
+        Notification.Builder builder = new Notification.Builder(this.getApplicationContext());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID,
+                    "CHANNEL", IMPORTANCE_HIGH);
+            notificationChannel.setShowBadge(true);
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            manager.createNotificationChannel(notificationChannel);
+            builder.setChannelId(CHANNEL_ID);
+        }
+        Intent nfIntent = new Intent(this, MainActivity.class);
+        builder.setContentIntent(PendingIntent.getActivity(this, 0, nfIntent, 0))
+                .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher))
+                .setContentTitle("WeJump")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentText("WeJump 服务")
+                .setWhen(System.currentTimeMillis());
+        return builder.build();
+
+    }
+
     public void start(int resultCode, Intent data) {
+        startForeground(110, getNotification());
         mResultCode = resultCode;
         mData = data;
         wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
@@ -191,17 +222,18 @@ public class MainService extends Service {
     }
 
     void beginCapture() {
-        layout.setVisibility(View.INVISIBLE);
+//        layout.hide();
         prepare();
 
-        if (mFirst) {
-            mFirst = false;
-            return;
-        }
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
+//        if (mFirst) {
+//            mFirst = false;
+//            return;
+//        }
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
                 Image image = mIR.acquireLatestImage();
+                if (image == null) return;
                 int width = image.getWidth();
                 int height = image.getHeight();
                 final Image.Plane[] planes = image.getPlanes();
@@ -215,13 +247,13 @@ public class MainService extends Service {
                 image.close();
 
                 afterCapture(bitmap);
-//            }
-//        }, 200);
+            }
+        }, 0);
     }
 
     void afterCapture(Bitmap bitmap) {
         if (layout != null) {
-            layout.setVisibility(View.VISIBLE);
+            layout.show();
             Point p = match(bitmap);
             layout.setCoordinate(p);
         }

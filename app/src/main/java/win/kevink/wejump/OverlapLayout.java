@@ -59,12 +59,11 @@ public class OverlapLayout extends RelativeLayout {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                findViewById(R.id.left_line).setVisibility(VISIBLE);
-                findViewById(R.id.right_line).setVisibility(VISIBLE);
+                show();
                 setCoordinate(mPoint);
                 isMoving = false;
             }
-        }, (int) time);
+        }, (int) time + 20);
     }
 
     public void setCoordinate(Point point) {
@@ -80,5 +79,15 @@ public class OverlapLayout extends RelativeLayout {
 //        params.leftMargin = point.x - offset;
 //        params.topMargin = point.y;
 //        leftLine.setLayoutParams(params);
+    }
+
+    public void hide() {
+        findViewById(R.id.left_line).setVisibility(INVISIBLE);
+        findViewById(R.id.right_line).setVisibility(INVISIBLE);
+    }
+
+    public void show() {
+        findViewById(R.id.left_line).setVisibility(VISIBLE);
+        findViewById(R.id.right_line).setVisibility(VISIBLE);
     }
 }
